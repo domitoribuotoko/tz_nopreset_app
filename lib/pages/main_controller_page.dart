@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -211,7 +212,6 @@ class _MainControllerState extends State<MainController> with SingleTickerProvid
           MaterialPageRoute(
             builder: (context) {
               return NewsDetailedPage(id: news.id!);
-              // return const TestPage();
             },
           ),
         );
@@ -266,11 +266,16 @@ class _MainControllerState extends State<MainController> with SingleTickerProvid
                       minHeight: metrix.screenwidth * 1 / 5,
                       maxHeight: metrix.screenwidth * 1 / 5,
                     ),
-                    child: Image.network(
-                      news.img!,
+                    child: CachedNetworkImage(
+                      fadeInDuration: const Duration(milliseconds: 200),
+                      imageUrl: news.img!,
                       fit: BoxFit.cover,
+                    )
+                    //  Image.network(
+                    //   news.img!,
+                    //   fit: BoxFit.cover,
+                    // ),
                     ),
-                  ),
           ],
         ),
       ),

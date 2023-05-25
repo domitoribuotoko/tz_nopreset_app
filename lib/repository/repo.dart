@@ -77,7 +77,6 @@ class Repository {
     dio.options.queryParameters['id'] = id;
     r = await dio.get('https://sarnovosti.ru/api/news.php');
     newsDetailes = Data.fromJson(r.data['data']);
-    print(newsDetailes);
     return newsDetailes;
   }
 }
