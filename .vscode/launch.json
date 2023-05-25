@@ -5,18 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "figma_app",
+            "name": "tz_noprese_app",
             "request": "launch",
             "type": "dart"
         },
         {
-            "name": "figma_app (profile mode)",
+            "name": "tz_noprese_app (profile mode)",
             "request": "launch",
             "type": "dart",
             "flutterMode": "profile"
         },
         {
-            "name": "figma_app (release mode)",
+            "name": "tz_noprese_app (release mode)",
             "request": "launch",
             "type": "dart",
             "flutterMode": "release"
