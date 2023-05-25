@@ -75,8 +75,8 @@ class _NewsDetailedPageState extends State<NewsDetailedPage> {
               ? ConstrainedBox(
                   constraints: BoxConstraints(
                     minWidth: metrix.screenwidth,
-                    maxHeight: metrix.screenwidth / 1.83,
-                    minHeight: metrix.screenwidth / 1.83,
+                    maxHeight: metrix.screenwidth / 1.7,
+                    minHeight: metrix.screenwidth / 1.7,
                   ),
                   child: Padding(
                     padding: const EdgeInsets.only(
@@ -87,7 +87,7 @@ class _NewsDetailedPageState extends State<NewsDetailedPage> {
                     child: CachedNetworkImage(
                       // fadeInDuration: const Duration(milliseconds: 150),
                       imageUrl: newsDetailes.img!,
-                      fit: BoxFit.fill,
+                      fit: BoxFit.cover,
                     ),
                     // Image.network(
                     //   newsDetailes.img!,

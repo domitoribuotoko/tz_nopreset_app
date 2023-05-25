@@ -1,7 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart';
+import 'package:extended_tabs/extended_tabs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:tz_nopreset_app/base/app_classes.dart';
 import 'package:tz_nopreset_app/base/app_constants.dart';
 import 'package:tz_nopreset_app/base/app_methods.dart';
@@ -32,15 +33,15 @@ class _MainControllerState extends State<MainController> with SingleTickerProvid
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: ExtendedNestedScrollView(
-        pinnedHeaderSliverHeightBuilder: () {
-          return 100;
-        },
-        onlyOneScrollInBody: true,
+      body: NestedScrollView(
+        // pinnedHeaderSliverHeightBuilder: () {
+        //   return 100;
+        // },
+        // onlyOneScrollInBody: true,
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
             SliverOverlapAbsorber(
-              handle: ExtendedNestedScrollView.sliverOverlapAbsorberHandleFor(context),
+              handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
               sliver: SliverAppBar(
                 toolbarHeight: 50,
                 title: Row(
@@ -104,7 +105,8 @@ class _MainControllerState extends State<MainController> with SingleTickerProvid
                     return Container();
                   }
                   if (state is LoadedInitialNewsState) {
-                    return TabBarView(
+                    return ExtendedTabBarView(
+                      cacheExtent: 3,
                       controller: tabController,
                       children: [
                         _newsScrollView(context, tabs[0], state.initNews.all, state.initNews),
@@ -114,7 +116,8 @@ class _MainControllerState extends State<MainController> with SingleTickerProvid
                     );
                   }
                   if (state is RefreshingState) {
-                    return TabBarView(
+                    return ExtendedTabBarView(
+                      cacheExtent: 3,
                       controller: tabController,
                       children: [
                         _newsScrollView(context, tabs[0], state.initNews.all, state.initNews),
@@ -175,11 +178,12 @@ class _MainControllerState extends State<MainController> with SingleTickerProvid
               return Future<void>.delayed(const Duration(microseconds: 2000));
             },
             child: CustomScrollView(
+              // cacheExtent: 20,
               controller: scrollController,
               key: PageStorageKey<String>(keyName),
               slivers: <Widget>[
                 SliverOverlapInjector(
-                  handle: ExtendedNestedScrollView.sliverOverlapAbsorberHandleFor(context),
+                  handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
                 ),
                 SliverList.separated(
                   itemCount: news.length,
@@ -267,7 +271,15 @@ class _MainControllerState extends State<MainController> with SingleTickerProvid
                       maxHeight: metrix.screenwidth * 1 / 5,
                     ),
                     child: CachedNetworkImage(
+                      cacheManager: CacheManager(
+                        Config(
+                          UniqueKey().toString(),
+                          // maxNrOfCacheObjects: 50,
+                          stalePeriod: const Duration(hours: 1),
+                        ),
+                      ),
                       fadeInDuration: const Duration(milliseconds: 200),
+                      fadeOutDuration: const Duration(milliseconds: 200),
                       imageUrl: news.img!,
                       fit: BoxFit.cover,
                     )

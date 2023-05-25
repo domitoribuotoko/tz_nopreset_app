@@ -104,3 +104,5 @@ class InitialNews {
   List<News> top = [];
   List<News> articles = [];
 }
+
+
