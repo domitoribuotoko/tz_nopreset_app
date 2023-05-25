@@ -278,8 +278,8 @@ class _MainControllerState extends State<MainController> with SingleTickerProvid
                           stalePeriod: const Duration(hours: 1),
                         ),
                       ),
-                      fadeInDuration: const Duration(milliseconds: 200),
-                      fadeOutDuration: const Duration(milliseconds: 200),
+                      fadeInDuration: const Duration(milliseconds: 100),
+                      fadeOutDuration: const Duration(milliseconds: 100),
                       imageUrl: news.img!,
                       fit: BoxFit.cover,
                     )

@@ -167,7 +167,10 @@ class _NewsDetailedPageState extends State<NewsDetailedPage> {
           ),
           newsDetailes.gallery != null
               ? Padding(
-                  padding: const EdgeInsets.only(bottom: 15),
+                  padding: const EdgeInsets.only(
+                    bottom: 15,
+                    // top: 15,
+                  ),
                   child: Column(
                     children: [
                       CarouselSlider.builder(
