@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:extended_tabs/extended_tabs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:tz_nopreset_app/base/app_classes.dart';
 import 'package:tz_nopreset_app/base/app_constants.dart';
 import 'package:tz_nopreset_app/base/app_methods.dart';
@@ -271,15 +270,15 @@ class _MainControllerState extends State<MainController> with SingleTickerProvid
                       maxHeight: metrix.screenwidth * 1 / 5,
                     ),
                     child: CachedNetworkImage(
-                      cacheManager: CacheManager(
-                        Config(
-                          UniqueKey().toString(),
-                          // maxNrOfCacheObjects: 50,
-                          stalePeriod: const Duration(hours: 1),
-                        ),
-                      ),
-                      fadeInDuration: const Duration(milliseconds: 100),
-                      fadeOutDuration: const Duration(milliseconds: 100),
+                      // cacheManager: CacheManager(
+                      //   Config(
+                      //     UniqueKey().toString(),
+                      //     // maxNrOfCacheObjects: 50,
+                      //     stalePeriod: const Duration(hours: 1),
+                      //   ),
+                      // ),
+                      // fadeInDuration: const Duration(milliseconds: 100),
+                      // fadeOutDuration: const Duration(milliseconds: 100),
                       imageUrl: news.img!,
                       fit: BoxFit.cover,
                     )
