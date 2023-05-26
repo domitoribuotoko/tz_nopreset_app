@@ -1,7 +1,11 @@
+import 'dart:math';
+import 'dart:ui';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:extended_tabs/extended_tabs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:tz_nopreset_app/base/app_classes.dart';
 import 'package:tz_nopreset_app/base/app_constants.dart';
 import 'package:tz_nopreset_app/base/app_methods.dart';
@@ -28,6 +32,9 @@ class _MainControllerState extends State<MainController> with SingleTickerProvid
       vsync: this,
     );
   }
+
+  int lastMilli = DateTime.now().millisecondsSinceEpoch;
+  Duration fadeDuration = const Duration(milliseconds: 500);
 
   @override
   Widget build(BuildContext context) {
@@ -114,17 +121,17 @@ class _MainControllerState extends State<MainController> with SingleTickerProvid
                       ],
                     );
                   }
-                  if (state is RefreshingState) {
-                    return ExtendedTabBarView(
-                      cacheExtent: 3,
-                      controller: tabController,
-                      children: [
-                        _newsScrollView(context, tabs[0], state.initNews.all, state.initNews),
-                        _newsScrollView(context, tabs[1], state.initNews.top, state.initNews),
-                        _newsScrollView(context, tabs[2], state.initNews.articles, state.initNews),
-                      ],
-                    );
-                  }
+                  // if (state is RefreshingState) {
+                  //   return ExtendedTabBarView(
+                  //     cacheExtent: 3,
+                  //     controller: tabController,
+                  //     children: [
+                  //       _newsScrollView(context, tabs[0], state.initNews.all, state.initNews),
+                  //       _newsScrollView(context, tabs[1], state.initNews.top, state.initNews),
+                  //       _newsScrollView(context, tabs[2], state.initNews.articles, state.initNews),
+                  //     ],
+                  //   );
+                  // }
                   if (state is LoadingErrorState) {
                     return Center(
                       child: Text(
@@ -152,9 +159,17 @@ class _MainControllerState extends State<MainController> with SingleTickerProvid
       builder: (context) {
         return NotificationListener<ScrollNotification>(
           onNotification: (notification) {
-            if (context.read<NewsBlocBloc>().state is RefreshingState) {
-              return true;
-            }
+            // if (context.read<NewsBlocBloc>().state is RefreshingState) {
+            //   return true;
+            // }
+            // print(scrollVelocity(notification));
+            double factor = max(
+              min(lerpDouble(1, 0, scrollVelocity(notification))!, 1),
+              0,
+            ).toDouble();
+
+            fadeDuration = Duration(milliseconds: max(100, (500 * factor).toInt()));
+
             if (context.read<NewsBlocBloc>().state is LoadedInitialNewsState) {
               if (notification.metrics.extentAfter < (scrollController.position.maxScrollExtent / 5) &&
                   scrollController.position.userScrollDirection.name == 'reverse') {
@@ -173,11 +188,18 @@ class _MainControllerState extends State<MainController> with SingleTickerProvid
             triggerMode: RefreshIndicatorTriggerMode.anywhere,
             color: appColors.pinkColor,
             onRefresh: () {
+              Future<void> indicatorDuration() async {
+                await context.read<NewsBlocBloc>().repository.refresh(
+                      currentNews,
+                      keyName,
+                      'refresh',
+                    );
+              }
               context.read<NewsBlocBloc>().add(RefreshEvent(currentNews, keyName, 'refresh'));
-              return Future<void>.delayed(const Duration(microseconds: 2000));
+              return indicatorDuration();
             },
             child: CustomScrollView(
-              // cacheExtent: 20,
+              cacheExtent: metrix.screenheight,
               controller: scrollController,
               key: PageStorageKey<String>(keyName),
               slivers: <Widget>[
@@ -270,15 +292,14 @@ class _MainControllerState extends State<MainController> with SingleTickerProvid
                       maxHeight: metrix.screenwidth * 1 / 5,
                     ),
                     child: CachedNetworkImage(
-                      // cacheManager: CacheManager(
-                      //   Config(
-                      //     UniqueKey().toString(),
-                      //     // maxNrOfCacheObjects: 50,
-                      //     stalePeriod: const Duration(hours: 1),
-                      //   ),
-                      // ),
-                      // fadeInDuration: const Duration(milliseconds: 100),
-                      // fadeOutDuration: const Duration(milliseconds: 100),
+                      cacheManager: CacheManager(
+                        Config(
+                          UniqueKey().toString(),
+                          maxNrOfCacheObjects: 1000,
+                          stalePeriod: const Duration(hours: 1),
+                        ),
+                      ),
+                      fadeInDuration: fadeDuration,
                       imageUrl: news.img!,
                       fit: BoxFit.cover,
                     )
@@ -291,5 +312,21 @@ class _MainControllerState extends State<MainController> with SingleTickerProvid
         ),
       ),
     );
+  }
+
+  double scrollVelocity(ScrollNotification notification) {
+    double pixelsPerMilli = 0;
+    final now = DateTime.now();
+    final timeDiff = now.millisecondsSinceEpoch - lastMilli;
+    if (notification is ScrollUpdateNotification) {
+      pixelsPerMilli = notification.scrollDelta! / timeDiff;
+      lastMilli = DateTime.now().millisecondsSinceEpoch;
+    }
+
+    if (notification is ScrollEndNotification) {
+      pixelsPerMilli = 0;
+      lastMilli = DateTime.now().millisecondsSinceEpoch;
+    }
+    return pixelsPerMilli;
   }
 }

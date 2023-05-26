@@ -21,7 +21,7 @@ class NewsBlocBloc extends Bloc<NewsBlocEvent, NewsBlocState> {
     );
     on<RefreshEvent>(
       (event, emit) async {
-        emit(RefreshingState(event.currentNews));
+        // emit(RefreshingState(event.currentNews));
         try {
           final initNews = await repository.refresh(event.currentNews, event.key, event.refreshType);
           emit(LoadedInitialNewsState(initNews));

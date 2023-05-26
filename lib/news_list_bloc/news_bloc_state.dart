@@ -10,10 +10,10 @@ class LoadedInitialNewsState extends NewsBlocState {
   LoadedInitialNewsState(this.initNews);
 }
 
-class RefreshingState extends NewsBlocState {
-  final InitialNews initNews;
-  RefreshingState(this.initNews);
-}
+// class RefreshingState extends NewsBlocState {
+//   final InitialNews initNews;
+//   RefreshingState(this.initNews);
+// }
 
 class LoadingErrorState extends NewsBlocState {
   final String error;
