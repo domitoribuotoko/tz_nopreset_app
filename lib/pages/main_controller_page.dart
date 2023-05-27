@@ -6,6 +6,7 @@ import 'package:extended_tabs/extended_tabs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:intl/intl.dart';
 import 'package:tz_nopreset_app/base/app_classes.dart';
 import 'package:tz_nopreset_app/base/app_constants.dart';
 import 'package:tz_nopreset_app/base/app_methods.dart';
@@ -39,111 +40,82 @@ class _MainControllerState extends State<MainController> with SingleTickerProvid
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: NestedScrollView(
-        // pinnedHeaderSliverHeightBuilder: () {
-        //   return 100;
-        // },
-        // onlyOneScrollInBody: true,
-        headerSliverBuilder: (context, innerBoxIsScrolled) {
-          return [
-            SliverOverlapAbsorber(
-              handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
-              sliver: SliverAppBar(
-                toolbarHeight: 50,
-                title: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'регион',
-                      style: TextStyle(fontSize: 25),
-                    ),
-                    Container(
-                      color: appColors.pinkColor,
-                      child: const Text(
-                        '64',
-                        style: TextStyle(fontSize: 25),
-                      ),
-                    ),
-                  ],
-                ),
-                centerTitle: true,
-                pinned: true,
-                backgroundColor: appColors.mainColor,
-                // forceElevated: innerBoxIsScrolled,
-                bottom: TabBar(
-                  controller: tabController,
-                  labelStyle: const TextStyle(
-                    fontSize: 20,
-                  ),
-                  indicatorColor: Colors.white,
-                  padding: const EdgeInsets.only(
-                    bottom: 3,
-                    left: 8,
-                    right: 8,
-                  ),
-                  tabs: tabs
-                      .map((String name) => Tab(
-                            text: name,
-                            height: 30,
-                          ))
-                      .toList(),
-                ),
-                actions: const [
-                  Padding(
-                    padding: EdgeInsets.only(right: 15),
-                    child: Icon(
-                      Icons.info_outline,
-                      size: 30,
-                    ),
-                  ),
-                ],
+      appBar: AppBar(
+        toolbarHeight: 50,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'регион',
+              style: TextStyle(fontSize: 25),
+            ),
+            Container(
+              color: appColors.pinkColor,
+              child: const Text(
+                '64',
+                style: TextStyle(fontSize: 25),
               ),
             ),
-          ];
-        },
-        body: Builder(
-          builder: (context) {
-            return BlocProvider<NewsBlocBloc>(
-              create: (context) => NewsBlocBloc(Repository())..add(GetInitialNewEvent()),
-              child: BlocBuilder<NewsBlocBloc, NewsBlocState>(
-                builder: (context, state) {
-                  if (state is NewsBlocInitialState) {
-                    return Container();
-                  }
-                  if (state is LoadedInitialNewsState) {
-                    return ExtendedTabBarView(
-                      cacheExtent: 3,
-                      controller: tabController,
-                      children: [
-                        _newsScrollView(context, tabs[0], state.initNews.all, state.initNews),
-                        _newsScrollView(context, tabs[1], state.initNews.top, state.initNews),
-                        _newsScrollView(context, tabs[2], state.initNews.articles, state.initNews),
-                      ],
-                    );
-                  }
-                  // if (state is RefreshingState) {
-                  //   return ExtendedTabBarView(
-                  //     cacheExtent: 3,
-                  //     controller: tabController,
-                  //     children: [
-                  //       _newsScrollView(context, tabs[0], state.initNews.all, state.initNews),
-                  //       _newsScrollView(context, tabs[1], state.initNews.top, state.initNews),
-                  //       _newsScrollView(context, tabs[2], state.initNews.articles, state.initNews),
-                  //     ],
-                  //   );
-                  // }
-                  if (state is LoadingErrorState) {
-                    return Center(
-                      child: Text(
-                        'Error ${state.error}',
-                      ),
-                    );
-                  } else {
-                    return Container();
-                  }
-                },
-              ),
-            );
+          ],
+        ),
+        centerTitle: true,
+        backgroundColor: appColors.mainColor,
+        // forceElevated: innerBoxIsScrolled,
+        bottom: TabBar(
+          controller: tabController,
+          labelStyle: const TextStyle(
+            fontSize: 20,
+          ),
+          indicatorColor: Colors.white,
+          padding: const EdgeInsets.only(
+            bottom: 3,
+            left: 8,
+            right: 8,
+          ),
+          tabs: tabs
+              .map((String name) => Tab(
+                    text: name,
+                    height: 30,
+                  ))
+              .toList(),
+        ),
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: 15),
+            child: Icon(
+              Icons.info_outline,
+              size: 30,
+            ),
+          ),
+        ],
+      ),
+      body: BlocProvider<NewsBlocBloc>(
+        create: (context) => NewsBlocBloc(Repository())..add(GetInitialNewEvent()),
+        child: BlocBuilder<NewsBlocBloc, NewsBlocState>(
+          builder: (context, state) {
+            if (state is NewsBlocInitialState) {
+              return Container();
+            }
+            if (state is LoadedInitialNewsState) {
+              return ExtendedTabBarView(
+                cacheExtent: 3,
+                controller: tabController,
+                children: [
+                  _newsScrollView(context, tabs[0], state.initNews.all, state.initNews),
+                  _newsScrollView(context, tabs[1], state.initNews.top, state.initNews),
+                  _newsScrollView(context, tabs[2], state.initNews.articles, state.initNews),
+                ],
+              );
+            }
+            if (state is LoadingErrorState) {
+              return Center(
+                child: Text(
+                  'Error ${state.error}',
+                ),
+              );
+            } else {
+              return Container();
+            }
           },
         ),
       ),
@@ -153,80 +125,70 @@ class _MainControllerState extends State<MainController> with SingleTickerProvid
   Widget _newsScrollView(BuildContext context, String keyName, List<News> news, InitialNews currentNews) {
     double pagesCount = news.length / 20;
     double expectPages = pagesCount + 1;
+    bool iscrollable = true;
 
     final ScrollController scrollController = ScrollController();
-    return Builder(
-      builder: (context) {
-        return NotificationListener<ScrollNotification>(
-          onNotification: (notification) {
-            // if (context.read<NewsBlocBloc>().state is RefreshingState) {
-            //   return true;
-            // }
-            // print(scrollVelocity(notification));
-            double factor = max(
-              min(lerpDouble(1, 0, scrollVelocity(notification))!, 1),
-              0,
-            ).toDouble();
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        double factor = max(
+          min(lerpDouble(1, 0, pow(scrollVelocity(notification), 2).toDouble())!, 1),
+          0,
+        ).toDouble();
+        fadeDuration = Duration(milliseconds: max(100, (500 * factor).toInt()));
 
-            fadeDuration = Duration(milliseconds: max(100, (500 * factor).toInt()));
-
-            if (context.read<NewsBlocBloc>().state is LoadedInitialNewsState) {
-              if (notification.metrics.extentAfter < (scrollController.position.maxScrollExtent / 5) &&
-                  scrollController.position.userScrollDirection.name == 'reverse') {
-                if (expectPages - pagesCount == 1) {
-                  pagesCount = pagesCount + 1;
-                  context.read<NewsBlocBloc>().add(RefreshEvent(currentNews, keyName, 'add'));
-                }
-              }
+        if (context.read<NewsBlocBloc>().state is LoadedInitialNewsState) {
+          if (notification.metrics.extentAfter < 2000 &&
+              scrollController.position.userScrollDirection.name == 'reverse') {
+            if (expectPages - pagesCount == 1) {
+              pagesCount = pagesCount + 1;
+              context.read<NewsBlocBloc>().add(RefreshEvent(currentNews, keyName, 'add'));
             }
+          }
+        }
 
-            return true;
-          },
-          child: RefreshIndicator(
-            edgeOffset: 135,
-            displacement: 30,
-            triggerMode: RefreshIndicatorTriggerMode.anywhere,
-            color: appColors.pinkColor,
-            onRefresh: () {
-              Future<void> indicatorDuration() async {
-                await context.read<NewsBlocBloc>().repository.refresh(
-                      currentNews,
-                      keyName,
-                      'refresh',
-                    );
-              }
-              context.read<NewsBlocBloc>().add(RefreshEvent(currentNews, keyName, 'refresh'));
-              return indicatorDuration();
-            },
-            child: CustomScrollView(
-              cacheExtent: metrix.screenheight,
-              controller: scrollController,
-              key: PageStorageKey<String>(keyName),
-              slivers: <Widget>[
-                SliverOverlapInjector(
-                  handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
-                ),
-                SliverList.separated(
-                  itemCount: news.length,
-                  itemBuilder: (context, index) {
-                    return _newsContainerWidget(news[index]);
-                  },
-                  separatorBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      child: Divider(
-                        thickness: 1,
-                        height: 0,
-                        color: Colors.grey[200],
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
+        return true;
       },
+      child: RefreshIndicator(
+        // edgeOffset: 135,
+        displacement: 30,
+        triggerMode: RefreshIndicatorTriggerMode.anywhere,
+        color: appColors.pinkColor,
+        onRefresh: () {
+          Future<void> indicatorDuration() async {
+            await context.read<NewsBlocBloc>().repository.refresh(
+                  currentNews,
+                  keyName,
+                  'refresh',
+                );
+          }
+
+          context.read<NewsBlocBloc>().add(RefreshEvent(currentNews, keyName, 'refresh'));
+          return indicatorDuration();
+        },
+        child: CustomScrollView(
+          cacheExtent: metrix.screenheight,
+          controller: scrollController,
+          key: PageStorageKey<String>(keyName),
+          slivers: <Widget>[
+            SliverList.separated(
+              itemCount: news.length,
+              itemBuilder: (context, index) {
+                return _newsContainerWidget(news[index]);
+              },
+              separatorBuilder: (context, index) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: Divider(
+                    thickness: 1,
+                    height: 0,
+                    color: Colors.grey[200],
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -327,6 +289,8 @@ class _MainControllerState extends State<MainController> with SingleTickerProvid
       pixelsPerMilli = 0;
       lastMilli = DateTime.now().millisecondsSinceEpoch;
     }
-    return pixelsPerMilli;
+    var f = NumberFormat("#.#####");
+
+    return double.parse(f.format(min(100, pixelsPerMilli.abs())));
   }
 }
