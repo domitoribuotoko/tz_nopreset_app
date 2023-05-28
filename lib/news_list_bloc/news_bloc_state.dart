@@ -1,7 +1,7 @@
 part of 'news_bloc_bloc.dart';
 
 @immutable
-abstract class NewsBlocState {}
+class NewsBlocState {}
 
 class NewsBlocInitialState extends NewsBlocState {}
 
@@ -16,6 +16,6 @@ class LoadedInitialNewsState extends NewsBlocState {
 // }
 
 class LoadingErrorState extends NewsBlocState {
-  final String error;
+  final DataErrorHelper error;
   LoadingErrorState(this.error);
 }

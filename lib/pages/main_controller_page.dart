@@ -23,15 +23,25 @@ class MainController extends StatefulWidget {
 }
 
 class _MainControllerState extends State<MainController> with SingleTickerProviderStateMixin {
+  InitialNews _news = InitialNews();
+  final NewsBlocBloc _bloc = NewsBlocBloc(Repository());
   late TabController tabController;
   final List<String> tabs = <String>['лента', 'важное', "статьи"];
+
   @override
   void initState() {
     super.initState();
+    _bloc.getInitialNews();
     tabController = TabController(
       length: 3,
       vsync: this,
     );
+  }
+
+  @override
+  void dispose() {
+    _bloc.close();
+    super.dispose();
   }
 
   int lastMilli = DateTime.now().millisecondsSinceEpoch;
@@ -89,43 +99,104 @@ class _MainControllerState extends State<MainController> with SingleTickerProvid
           ),
         ],
       ),
-      body: BlocProvider<NewsBlocBloc>(
-        create: (context) => NewsBlocBloc(Repository())..add(GetInitialNewEvent()),
-        child: BlocBuilder<NewsBlocBloc, NewsBlocState>(
-          builder: (context, state) {
-            if (state is NewsBlocInitialState) {
-              return Container();
-            }
-            if (state is LoadedInitialNewsState) {
-              return ExtendedTabBarView(
-                cacheExtent: 3,
-                controller: tabController,
-                children: [
-                  _newsScrollView(context, tabs[0], state.initNews.all, state.initNews),
-                  _newsScrollView(context, tabs[1], state.initNews.top, state.initNews),
-                  _newsScrollView(context, tabs[2], state.initNews.articles, state.initNews),
-                ],
-              );
-            }
-            if (state is LoadingErrorState) {
-              return Center(
-                child: Text(
-                  'Error ${state.error}',
-                ),
-              );
-            } else {
-              return Container();
-            }
-          },
-        ),
+      body: BlocConsumer(
+        bloc: _bloc,
+        listener: (BuildContext context, NewsBlocState state) async {
+          if (state is NewsBlocInitialState) {
+          } else if (state is LoadingErrorState) {
+            // var snackBar = SnackBar(
+            //   content: Text(state.error.error),
+            // );
+            showDialog(
+              context: context,
+              builder: (context) {
+                return Dialog(
+                  insetPadding: EdgeInsets.zero,
+                  elevation: 0,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          state.error.error,
+                          style: const TextStyle(
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _bloc.getInitialNews();
+                        },
+                        child: Text(
+                          'try again',
+                          style: TextStyle(
+                            color: appColors.pinkColor,
+                          ),
+                        ),
+                      )
+                    ],
+                  ),
+                );
+              },
+            );
+            // ScaffoldMessenger.of(context).showSnackBar(snackBar);
+          } else if (state is LoadedInitialNewsState) {
+            _news = state.initNews;
+          }
+        },
+        builder: (BuildContext context, NewsBlocState state) {
+          return state is NewsBlocInitialState
+              ? Container()
+              : ExtendedTabBarView(
+                  cacheExtent: 3,
+                  controller: tabController,
+                  children: [
+                    _newsScrollView(context, tabs[0], _news.all, _news),
+                    _newsScrollView(context, tabs[1], _news.top, _news),
+                    _newsScrollView(context, tabs[2], _news.articles, _news),
+                  ],
+                );
+        },
       ),
+      //  BlocProvider<NewsBlocBloc>(
+      //   create: (context) => NewsBlocBloc(Repository())..add(GetInitialNewEvent()),
+      //   child: BlocBuilder<NewsBlocBloc, NewsBlocState>(
+      //     builder: (context, state) {
+      //       if (state is NewsBlocInitialState) {
+      //         return Container();
+      //       }
+      //       if (state is LoadedInitialNewsState) {
+      // return ExtendedTabBarView(
+      //   cacheExtent: 3,
+      //   controller: tabController,
+      //   children: [
+      //     _newsScrollView(context, tabs[0], state.initNews.all, state.initNews),
+      //     _newsScrollView(context, tabs[1], state.initNews.top, state.initNews),
+      //     _newsScrollView(context, tabs[2], state.initNews.articles, state.initNews),
+      //   ],
+      // );
+      //       }
+      //       if (state is LoadingErrorState) {
+      //         return Center(
+      //           child: Text(
+      //             'Error ${state.error}',
+      //           ),
+      //         );
+      //       } else {
+      //         return Container();
+      //       }
+      //     },
+      //   ),
+      // ),
     );
   }
 
   Widget _newsScrollView(BuildContext context, String keyName, List<News> news, InitialNews currentNews) {
     double pagesCount = news.length / 20;
     double expectPages = pagesCount + 1;
-    bool iscrollable = true;
 
     final ScrollController scrollController = ScrollController();
     return NotificationListener<ScrollNotification>(
@@ -136,12 +207,13 @@ class _MainControllerState extends State<MainController> with SingleTickerProvid
         ).toDouble();
         fadeDuration = Duration(milliseconds: max(100, (500 * factor).toInt()));
 
-        if (context.read<NewsBlocBloc>().state is LoadedInitialNewsState) {
+        if (_bloc.state is LoadedInitialNewsState) {
           if (notification.metrics.extentAfter < 2000 &&
               scrollController.position.userScrollDirection.name == 'reverse') {
             if (expectPages - pagesCount == 1) {
               pagesCount = pagesCount + 1;
-              context.read<NewsBlocBloc>().add(RefreshEvent(currentNews, keyName, 'add'));
+
+              _bloc.refreshNews(currentNews, keyName, 'add');
             }
           }
         }
@@ -155,14 +227,14 @@ class _MainControllerState extends State<MainController> with SingleTickerProvid
         color: appColors.pinkColor,
         onRefresh: () {
           Future<void> indicatorDuration() async {
-            await context.read<NewsBlocBloc>().repository.refresh(
-                  currentNews,
-                  keyName,
-                  'refresh',
-                );
+            await _bloc.repository.refresh(
+              currentNews,
+              keyName,
+              'refresh',
+            );
           }
 
-          context.read<NewsBlocBloc>().add(RefreshEvent(currentNews, keyName, 'refresh'));
+          _bloc.refreshNews(currentNews, keyName, 'refresh');
           return indicatorDuration();
         },
         child: CustomScrollView(

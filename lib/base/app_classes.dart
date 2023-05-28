@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart';
+
 class News {
   String? id;
   String? img;
@@ -103,4 +105,28 @@ class InitialNews {
   List<News> all = [];
   List<News> top = [];
   List<News> articles = [];
+}
+
+class DataErrorHelper {
+  final String error;
+  final bool noConnection;
+  final String? responseError;
+  final int responseCode;
+
+  DataErrorHelper({
+    required this.error,
+    this.noConnection = false,
+    this.responseError,
+    this.responseCode = 0,
+  });
+}
+
+class ResponseDataHelper {
+  final dynamic dynamicData;
+  final Response dioResponse;
+
+  ResponseDataHelper({
+    required this.dynamicData,
+    required this.dioResponse,
+  });
 }
